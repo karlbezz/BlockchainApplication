@@ -48,8 +48,9 @@
     <Compile Include="MessageHandling.cs" />
     <Compile Include="NodeBroadcasting.cs" />
     <Compile Include="NodeOperation.cs" />
-    <Compile Include="NodeReceiving.cs" />
+    <Compile Include="SyncingOperations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RequestsProcessor.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

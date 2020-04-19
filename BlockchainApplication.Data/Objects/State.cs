@@ -11,6 +11,14 @@ namespace BlockchainApplication.Data.Objects
         public string Username { get; set; }
         public List<Transaction> Transactions { get; set; }
         public Dictionary<string, int> Balances { get; set; }
-        public bool Syncing { get; set; }
+        public NodeState NodeState { get; set; }
+
+        public State(string username)
+        {
+            this.Username = username;
+            this.Transactions = new List<Transaction>();
+            this.Balances = new Dictionary<string, int>();
+            this.NodeState = NodeState.AVAILABLE;
+        }
     }
 }

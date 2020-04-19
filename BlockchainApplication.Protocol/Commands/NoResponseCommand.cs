@@ -6,14 +6,7 @@ using System.Threading.Tasks;
 
 namespace BlockchainApplication.Protocol.Commands
 {
-    public enum BlockchainCommands
+    public class NoResponseCommand : Command
     {
-        NO_RESPONSE,
-        NEW_TRANS,
-        HIGHEST_TRN,
-        HIGHEST_TRN_RES,
-        GET_TRANS,
-        OK_MSG,
-        NOK_MSG,
     }
 }

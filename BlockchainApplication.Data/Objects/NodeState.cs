@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace BlockchainApplication.Data.Objects
 {
-    public class NodeDetails
+    public enum NodeState
     {
-        public string IP { get; set; }
-        public int Port { get; set; }
-        public bool Online { get; set; }
+        AVAILABLE,
+        SYNCING,
+        RECEIVING,
+        SENDING
     }
 }

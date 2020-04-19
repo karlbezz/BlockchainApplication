@@ -45,6 +45,7 @@
     <Compile Include="Commands\HighestTransactionResultCommand.cs" />
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\NewTransactionCommand.cs" />
+    <Compile Include="Commands\NoResponseCommand.cs" />
     <Compile Include="Parser\CommandsParser.cs" />
     <Compile Include="Processor\CommandProcessor.cs" />
     <Compile Include="Processor\MessageProcessor.cs" />

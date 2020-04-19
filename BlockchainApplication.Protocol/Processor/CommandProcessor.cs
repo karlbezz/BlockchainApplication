@@ -13,7 +13,11 @@ namespace BlockchainApplication.Protocol.Processor
             switch (commandType)
             {
                 case BlockchainCommands.NEW_TRANS:
-                    return ProcessNewTransactionCommand(messageParams[0], messageParams[1], messageParams[2]);
+                    if(messageParams.Length == 3)
+                    {
+                        return ProcessNewTransactionCommand(messageParams[0], messageParams[1], messageParams[2]);
+                    }
+                    return ProcessNewTransactionCommand(messageParams[0], messageParams[1], messageParams[2], messageParams[3]);
                 case BlockchainCommands.HIGHEST_TRN:
                     return ProcessHighestTransactionCommand();
                 case BlockchainCommands.HIGHEST_TRN_RES:
@@ -43,6 +47,23 @@ namespace BlockchainApplication.Protocol.Processor
             transactionCommandBytes.AddRange(fromUserBytes);
             transactionCommandBytes.AddRange(toUserBytes);
             transactionCommandBytes.AddRange(timestamp);
+            return transactionCommandBytes.ToArray();
+        }
+
+        private static byte[] ProcessNewTransactionCommand(string transactionNumber, string fromUser, string toUser, string timestamp)
+        {
+            byte[] prefixBytes = "n".ToBytes();
+            byte[] tnBytes = transactionNumber.ToInteger().ToBytes();
+            byte[] fromUserBytes = fromUser.ToBytes();
+            byte[] toUserBytes = toUser.ToBytes();
+            byte[] timestampBytes = timestamp.ToBytes();
+
+            List<byte> transactionCommandBytes = new List<byte>();
+            transactionCommandBytes.AddRange(prefixBytes);
+            transactionCommandBytes.AddRange(tnBytes);
+            transactionCommandBytes.AddRange(fromUserBytes);
+            transactionCommandBytes.AddRange(toUserBytes);
+            transactionCommandBytes.AddRange(timestampBytes);
             return transactionCommandBytes.ToArray();
         }
 

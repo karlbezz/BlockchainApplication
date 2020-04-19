@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("BlockchainApplication")]
+[assembly: AssemblyTitle("BlockchainApplication.Nodes")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("BlockchainApplication")]
+[assembly: AssemblyProduct("BlockchainApplication.Nodes")]
 [assembly: AssemblyCopyright("Copyright ©  2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("fbfc6ec9-f056-4f41-801f-15b6858140a2")]
+[assembly: Guid("8f1ded0a-1f56-47e5-a9b9-d74f06dc6313")]
 
 // Version information for an assembly consists of the following four values:
 //

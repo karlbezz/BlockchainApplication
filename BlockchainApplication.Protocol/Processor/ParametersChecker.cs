@@ -23,7 +23,7 @@ namespace BlockchainApplication.Protocol.Processor
         {
             int transactionNumber = messageParams[0].ToInteger();
             byte[] transactionNumberBytes = transactionNumber.ToBytes();
-            return messageParams.Length > 3 && transactionNumberBytes.Length <= 2;
+            return (messageParams.Length >= 3 && transactionNumberBytes.Length <= 2);
         }
 
         private static bool CheckGetTransactionParameters(BlockchainCommands commandType, params string[] messageParams)

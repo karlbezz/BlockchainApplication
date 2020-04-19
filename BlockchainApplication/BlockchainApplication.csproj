@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{FBFC6EC9-F056-4F41-801F-15B6858140A2}</ProjectGuid>
+    <ProjectGuid>{8F1DED0A-1F56-47E5-A9B9-D74F06DC6313}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>BlockchainApplication</RootNamespace>
     <AssemblyName>BlockchainApplication</AssemblyName>
@@ -47,6 +47,17 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="SeedNodes.csv" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BlockchainApplication.Broadcaster\BlockchainApplication.Broadcaster.csproj">
+      <Project>{BDF50CFD-3E13-4967-AF16-BDC613314D95}</Project>
+      <Name>BlockchainApplication.Broadcaster</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\BlockchainApplication.Data\BlockchainApplication.Data.csproj">
+      <Project>{A4774BFE-0E31-4BCE-B73D-D2D8E09473DF}</Project>
+      <Name>BlockchainApplication.Data</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -45,6 +45,7 @@
     <Compile Include="Extensions\LongExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="FileHandling.cs" />
+    <Compile Include="Objects\NodeState.cs" />
     <Compile Include="Objects\NodeDetails.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Objects\State.cs" />
