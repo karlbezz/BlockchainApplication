@@ -14,7 +14,8 @@ namespace BlockchainApplication.Protocol.Parser
             byte[] command = new byte[commandLength];
             Array.Copy(message, 2, command, 0, commandLength);
             byte suffix = message[message.Length - 1];
-            switch (prefix)
+            byte commandPrefix = command[0];
+            switch (commandPrefix)
             {
                 case 0x6e:
                     return ParseNewTransactionCommand(command);
@@ -29,16 +30,16 @@ namespace BlockchainApplication.Protocol.Parser
                 case 0x66:
                     return ParseNotOkMessageCommand(command);
                 default:
-                    throw new Exception($"{DateTime.Now} - Invalid command passed.");                
+                    throw new Exception($"{DateTime.Now} - Invalid command passed. {message.ToStringValue()}");                
             }
         }
 
         public static NewTransactionCommand ParseNewTransactionCommand(byte[] command)
         {
-            byte[] transactionNumberBytes = command.GetRange(1, 2);
-            byte[] fromUserBytes = command.GetRange(3, 2);
-            byte[] toUserBytes = command.GetRange(5, 2);
-            byte[] timestampBytes = command.GetRange(7, command.Length - 8);
+            byte[] transactionNumberBytes = command.GetRange(1, 4);
+            byte[] fromUserBytes = command.GetRange(5, 2);
+            byte[] toUserBytes = command.GetRange(7, 2);
+            byte[] timestampBytes = command.GetRange(9, command.Length - 9);
             return new NewTransactionCommand()
             {
                 Prefix = Encoding.ASCII.GetString(new byte[] { command[0] }),
@@ -52,7 +53,7 @@ namespace BlockchainApplication.Protocol.Parser
 
         public static HighestTransactionResultCommand ParseHighestTransactionResultCommand(byte[] command)
         {
-            byte[] transactionNumberBytes = command.GetRange(1, 2);
+            byte[] transactionNumberBytes = command.GetRange(1, 4);
             return new HighestTransactionResultCommand()
             {
                 Prefix = Encoding.ASCII.GetString(new byte[] { command[0] }),
@@ -72,7 +73,7 @@ namespace BlockchainApplication.Protocol.Parser
 
         public static GetTransactionCommand ParseGetTransactionCommand(byte[] command)
         {
-            byte[] transactionNumberBytes = command.GetRange(1, 2);
+            byte[] transactionNumberBytes = command.GetRange(1, 4);
             return new GetTransactionCommand()
             {
                 Prefix = Encoding.ASCII.GetString(new byte[] { command[0] }),

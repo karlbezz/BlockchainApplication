@@ -21,7 +21,7 @@ namespace BlockchainApplication.Protocol.Processor
                 case BlockchainCommands.HIGHEST_TRN:
                     return ProcessHighestTransactionCommand();
                 case BlockchainCommands.HIGHEST_TRN_RES:
-                    return ProcessHighestTransactionReturnCommand(messageParams[0]);
+                    return ProcessHighestTransactionResultCommand(messageParams[0]);
                 case BlockchainCommands.GET_TRANS:
                     return ProcessGetTransactionCommand(messageParams[0]);
                 case BlockchainCommands.OK_MSG:
@@ -73,10 +73,10 @@ namespace BlockchainApplication.Protocol.Processor
             return prefixBytes;
         }
 
-        private static byte[] ProcessHighestTransactionReturnCommand(string transactionNumber)
+        private static byte[] ProcessHighestTransactionResultCommand(string transactionNumber)
         {
             byte[] prefixBytes = "m".ToBytes();
-            byte[] tnBytes = transactionNumber.ToBytes();
+            byte[] tnBytes = transactionNumber.ToInteger().ToBytes();
             List<byte> highestTransactionCommandBytes = new List<byte>();
             highestTransactionCommandBytes.AddRange(prefixBytes);
             highestTransactionCommandBytes.AddRange(tnBytes);
@@ -86,7 +86,7 @@ namespace BlockchainApplication.Protocol.Processor
         private static byte[] ProcessGetTransactionCommand(string transactionNumber)
         {
             byte[] prefixBytes = "g".ToBytes();
-            byte[] tnBytes = transactionNumber.ToBytes();
+            byte[] tnBytes = transactionNumber.ToInteger().ToBytes();
             List<byte> getTransactionCommandBytes = new List<byte>();
             getTransactionCommandBytes.AddRange(prefixBytes);
             getTransactionCommandBytes.AddRange(tnBytes);

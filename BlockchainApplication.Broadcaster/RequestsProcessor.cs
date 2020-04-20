@@ -15,7 +15,13 @@ namespace BlockchainApplication.Broadcaster
         public static State ProcessReceiveRequest(State state, byte[] messageBytes, NodeDetails node)
         {
             var command = CommandsParser.ParseCommand(messageBytes);
-            if (command.CommandType.Equals(BlockchainCommands.NEW_TRANS))
+            return ProcessReceiveRequest(state, command, node);
+        }
+
+        public static State ProcessReceiveRequest(State state, Command command, NodeDetails node)
+        {
+            Console.WriteLine($"{DateTime.Now} - Received {command.CommandType} command.");
+            if (state.NodeState != NodeState.SYNCING && command.CommandType.Equals(BlockchainCommands.NEW_TRANS))
             {
                 state = ProcessNewTransactionReceived(state, command, node);
             }
@@ -27,13 +33,13 @@ namespace BlockchainApplication.Broadcaster
             {
                 ProcessHighestTransactionRequest(state, command, node);
             }
-
+            Console.WriteLine($"{DateTime.Now} - Command processed.");
             return state;
         }
 
         public static void ProcessHighestTransactionRequest(State state, Command command, NodeDetails node)
         {
-            int transactionNumber = state.Transactions.Max(p => p.Number);
+            int transactionNumber = state.Transactions.Count == 0 ? 0 : state.Transactions.Max(p => p.Number);
             byte[] message = MessageProcessor.ProcessMessage(BlockchainCommands.HIGHEST_TRN_RES,
                                                              new string[] { transactionNumber.ToString() });
             NodeBroadcasting.BroadcastToSeedNode(message, node);

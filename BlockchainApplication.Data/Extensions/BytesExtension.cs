@@ -25,6 +25,11 @@ namespace BlockchainApplication.Data.Extensions
         {
             try
             {
+                if(valueBytes.Length < 4)
+                {
+                    byte[] tempValueBytes = new byte[4] { 0, 0, valueBytes[0], valueBytes[1] };
+                    return BitConverter.ToInt32(tempValueBytes, 0);
+                }
                 return BitConverter.ToInt32(valueBytes, 0);
             }
             catch(Exception e)

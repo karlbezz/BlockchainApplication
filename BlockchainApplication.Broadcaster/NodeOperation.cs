@@ -41,10 +41,18 @@ namespace BlockchainApplication.Broadcaster
             int maxTxNumber = state.Transactions.Count;
             for(int i= 0; i < 10; i++)
             {
-                Transaction transaction = new Transaction(maxTxNumber, "00", state.Username, DateTime.Now.Ticks);
+                Transaction transaction = new Transaction(maxTxNumber, "00", state.Username,(long)DateTime.UtcNow.Subtract(new DateTime(1970,1,1)).TotalSeconds);
                 state.Transactions.Add(transaction);
                 state.Balances[state.Username] += 1;
                 maxTxNumber++;
+
+                foreach(var node in seedNodes)
+                {
+                    byte[] message = MessageProcessor.ProcessMessage(BlockchainCommands.NEW_TRANS, 
+                                                                     new string[] { transaction.Number.ToString(), transaction.From,
+                                                                                    transaction.To, transaction.Timestamp.ToString()});
+                    NodeBroadcasting.BroadcastToSeedNode(message, node);
+                }
             }
             Console.WriteLine($"{DateTime.Now} - Mined transactions added.");
         }
@@ -53,17 +61,37 @@ namespace BlockchainApplication.Broadcaster
         {
             while (true)
             {
-                SyncData();
-                if (firstRun)
-                {
-                    AddInitTransactions();
-                    firstRun = false;
-                }
-                Task task = Task.Run(() =>
-                {
-                    ReceiveRequests();
+                Task syncTask = Task.Factory.StartNew(() => {
+                    while (true)
+                    {
+                        while (!state.NodeState.Equals(NodeState.AVAILABLE))
+                        {
+                            Console.WriteLine($"{DateTime.Now} - Waiting for node to finish receiving requests..");
+                        }
+                        SyncData();
+                        if (firstRun)
+                        {
+                            AddInitTransactions();
+                            firstRun = false;
+                        }
+                        Thread.Sleep(5000);
+                    }
                 });
-                task.Wait(TimeSpan.FromSeconds(5));
+
+                Task handleRequests = Task.Factory.StartNew(() =>
+                {
+                    Thread.Sleep(100);
+                    while (true)
+                    {
+                        if (state.NodeState.Equals(NodeState.AVAILABLE))
+                        {
+                            Console.WriteLine($"{DateTime.Now} - Started Receiving Requests..");
+                            ReceiveRequests();
+                        }
+                    }
+                });
+
+                Task.WaitAll(syncTask, handleRequests);
             }
         }
 
@@ -73,17 +101,19 @@ namespace BlockchainApplication.Broadcaster
             Console.WriteLine($"{DateTime.Now} - Syncing..");
             int highestTransaction = 0;
             NodeDetails highestTransactionNode = null;
+
+            string[] messageParams = new string[] { };
+            byte[] message = MessageProcessor.ProcessMessage(BlockchainCommands.HIGHEST_TRN, messageParams);
             foreach (var node in seedNodes)
             {
-                string[] messageParams = new string[] { };
-                byte[] message = MessageProcessor.ProcessMessage(BlockchainCommands.HIGHEST_TRN, messageParams);
                 NodeBroadcasting.BroadcastToSeedNode(message, node);
-                var command = SyncingOperations.ReceiveMessage(udpServer, node, BlockchainCommands.HIGHEST_TRN_RES, sourcePort);
+                var command = SyncingOperations.ReceiveMessage(state, udpServer, node, BlockchainCommands.HIGHEST_TRN_RES, sourcePort);
                 if(command.CommandType != BlockchainCommands.NO_RESPONSE)
                 {
                     var highestTransactionResultCommand = (HighestTransactionResultCommand)command;
                     if (highestTransaction < highestTransactionResultCommand.TransactionNumber)
                     {
+                        Console.WriteLine($"{DateTime.Now} - Highest Transaction Updated.");
                         highestTransaction = highestTransactionResultCommand.TransactionNumber;
                         highestTransactionNode = node;
                     }
@@ -100,24 +130,22 @@ namespace BlockchainApplication.Broadcaster
 
         private void ReceiveRequests()
         {
-            seedNodes.ForEach(x => x.Online = true);
             while (true)
-            {   
-                for(int i = 0;i<seedNodes.Count; i++)
+            {
+                if (state.NodeState.Equals(NodeState.AVAILABLE))
                 {
-                    if (seedNodes[i].Online)
+                    state.NodeState = NodeState.RECEIVING;
+                    for (int i = 0; i < seedNodes.Count; i++)
                     {
                         var remoteEp = new IPEndPoint(IPAddress.Any, seedNodes[i].Port);
                         byte[] messageBytes = ReceiveBytePacket(udpServer, remoteEp);
-                        if (messageBytes.Length == 0)
-                        {
-                            seedNodes[i].Online = false;
-                        }
-                        else
+                        if (messageBytes.Length != 0)
                         {
                             RequestsProcessor.ProcessReceiveRequest(state, messageBytes, seedNodes[i]);
                         }
                     }
+                    state.NodeState = NodeState.AVAILABLE;
+                    Thread.Sleep(1000);
                 }
             }
         }

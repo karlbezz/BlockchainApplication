@@ -18,7 +18,6 @@ namespace BlockchainApplication.Broadcaster
         {
             IPAddress address = IPAddress.Parse(node.IP);
             var remoteEp = new IPEndPoint(address, node.Port);
-            var command = ReceivePacket(udpServer, remoteEp);
             return ReceivePacket(udpServer, remoteEp);
         }
 
@@ -44,6 +43,7 @@ namespace BlockchainApplication.Broadcaster
             while (true)
             {
                 var command = ReceiveCommand(udpServer, node, sourcePort);
+                Console.WriteLine($"{DateTime.Now} - Received {command.CommandType} command.");
                 if (command.CommandType.Equals(BlockchainCommands.NO_RESPONSE))
                 {
                     return command;
@@ -55,43 +55,50 @@ namespace BlockchainApplication.Broadcaster
                     {
                         return command;
                     }
-                    else
-                    {
-                        NodeBroadcasting.SendNotOkMessage(node);
-                    }
-                }
-                else
-                {
-                    NodeBroadcasting.SendNotOkMessage(node);
                 }
             }
         }
 
-        public static Command ReceiveMessage(UdpClient udpServer, NodeDetails node, BlockchainCommands commandType, int sourcePort)
+        public static Command ReceiveMessage(State state, UdpClient udpServer, NodeDetails node, BlockchainCommands commandType, int sourcePort)
         {
             while (true)
             {
                 var command = ReceiveCommand(udpServer, node, sourcePort);
+                Console.WriteLine($"{DateTime.Now} - Received {command.CommandType} command.");
                 if (command.CommandType.Equals(commandType) || command.CommandType.Equals(BlockchainCommands.NO_RESPONSE))
                 {
                     return command;
                 }
                 else
                 {
-                    NodeBroadcasting.SendNotOkMessage(node);
+                    RequestsProcessor.ProcessReceiveRequest(state, command, node);
                 }
             }
         }
 
         public static State UpdateState(UdpClient udpServer, State state, NodeDetails node, int sourcePort, int highestTransaction, int currentTransaction)
         {
-            for (int i = currentTransaction; i < highestTransaction; i++)
+            for (int i = currentTransaction; i <= highestTransaction; i++)
             {
-                byte[] message = MessageProcessor.ProcessMessage(BlockchainCommands.GET_TRANS, new string[] { currentTransaction.ToString() });
-                NodeBroadcasting.BroadcastToSeedNode(message, node);
-                var command = (NewTransactionCommand)ReceiveNewTransaction(udpServer, node, i, sourcePort);
-                if (command.CommandType.Equals(BlockchainCommands.NO_RESPONSE))
+                Console.WriteLine($"{DateTime.Now} - Getting Transaction {i}..");
+                byte[] message = MessageProcessor.ProcessMessage(BlockchainCommands.GET_TRANS, new string[] { i.ToString() });
+                int retry = 0;
+                var command = new NewTransactionCommand();
+                while(retry < 5)
                 {
+                    NodeBroadcasting.BroadcastToSeedNode(message, node);
+                    var newCommand = ReceiveNewTransaction(udpServer, node, i, sourcePort);
+                    if (newCommand.CommandType.Equals(BlockchainCommands.NEW_TRANS))
+                    {
+                        command = (NewTransactionCommand)newCommand;
+                        break;
+                    }
+                    retry++;
+                }
+                
+                if (retry >= 5)
+                {
+                    Console.WriteLine($"{DateTime.Now} - Failed to get transaction {i}");
                     return state;
                 }
                 state.Transactions.Add(new Transaction(command.TransactionNumber, command.FromUser, command.ToUser, command.Timestamp));
