@@ -43,7 +43,6 @@ namespace BlockchainApplication.Broadcaster
             while (true)
             {
                 var command = ReceiveCommand(udpServer, node, sourcePort);
-                Console.WriteLine($"{DateTime.Now} - Received {command.CommandType} command.");
                 if (command.CommandType.Equals(BlockchainCommands.NO_RESPONSE))
                 {
                     return command;
@@ -64,7 +63,7 @@ namespace BlockchainApplication.Broadcaster
             while (true)
             {
                 var command = ReceiveCommand(udpServer, node, sourcePort);
-                Console.WriteLine($"{DateTime.Now} - Received {command.CommandType} command.");
+                state.OutputLog.Add($"{DateTime.Now} - Received {command.CommandType} command.");
                 if (command.CommandType.Equals(commandType) || command.CommandType.Equals(BlockchainCommands.NO_RESPONSE))
                 {
                     return command;
@@ -80,7 +79,7 @@ namespace BlockchainApplication.Broadcaster
         {
             for (int i = currentTransaction; i <= highestTransaction; i++)
             {
-                Console.WriteLine($"{DateTime.Now} - Getting Transaction {i}..");
+                state.OutputLog.Add($"{DateTime.Now} - Getting Transaction {i}..");
                 byte[] message = MessageProcessor.ProcessMessage(BlockchainCommands.GET_TRANS, new string[] { i.ToString() });
                 int retry = 0;
                 var command = new NewTransactionCommand();
@@ -98,10 +97,20 @@ namespace BlockchainApplication.Broadcaster
                 
                 if (retry >= 5)
                 {
-                    Console.WriteLine($"{DateTime.Now} - Failed to get transaction {i}");
+                    state.OutputLog.Add($"{DateTime.Now} - Failed to get transaction {i}");
                     return state;
                 }
                 state.Transactions.Add(new Transaction(command.TransactionNumber, command.FromUser, command.ToUser, command.Timestamp));
+                if (!state.Balances.ContainsKey(command.ToUser))
+                {
+                    state.Balances.Add(command.ToUser, 0);
+                }
+                state.Balances[command.ToUser] += 1;
+
+                if (state.Balances.ContainsKey(command.FromUser))
+                {
+                    state.Balances[command.FromUser] -= 1;
+                }
             }
 
             return state;

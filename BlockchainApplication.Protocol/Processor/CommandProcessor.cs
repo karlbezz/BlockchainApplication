@@ -13,10 +13,6 @@ namespace BlockchainApplication.Protocol.Processor
             switch (commandType)
             {
                 case BlockchainCommands.NEW_TRANS:
-                    if(messageParams.Length == 3)
-                    {
-                        return ProcessNewTransactionCommand(messageParams[0], messageParams[1], messageParams[2]);
-                    }
                     return ProcessNewTransactionCommand(messageParams[0], messageParams[1], messageParams[2], messageParams[3]);
                 case BlockchainCommands.HIGHEST_TRN:
                     return ProcessHighestTransactionCommand();
@@ -56,7 +52,7 @@ namespace BlockchainApplication.Protocol.Processor
             byte[] tnBytes = transactionNumber.ToInteger().ToBytes();
             byte[] fromUserBytes = fromUser.ToBytes();
             byte[] toUserBytes = toUser.ToBytes();
-            byte[] timestampBytes = timestamp.ToBytes();
+            byte[] timestampBytes = Convert.ToInt64(timestamp).ToBytes();
 
             List<byte> transactionCommandBytes = new List<byte>();
             transactionCommandBytes.AddRange(prefixBytes);

@@ -25,14 +25,7 @@ namespace BlockchainApplication.Data.Extensions
         {
             try
             {
-                byte[] numberBytes = BitConverter.GetBytes(valueInt);
-                if(numberBytes.Length < 2)
-                {
-                    numberBytes = new byte[2];
-                    numberBytes[0] = 0x00;
-                    numberBytes[1] = Convert.ToByte(valueInt);
-                }
-
+                byte[] numberBytes = BitConverter.GetBytes((Int16)valueInt);
                 return BitConverter.GetBytes(valueInt);
             }
             catch(Exception e)

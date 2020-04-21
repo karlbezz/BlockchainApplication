@@ -20,7 +20,7 @@ namespace BlockchainApplication.Broadcaster
 
         public static State ProcessReceiveRequest(State state, Command command, NodeDetails node)
         {
-            Console.WriteLine($"{DateTime.Now} - Received {command.CommandType} command.");
+            state.OutputLog.Add($"{DateTime.Now} - Received {command.CommandType} command.");
             if (state.NodeState != NodeState.SYNCING && command.CommandType.Equals(BlockchainCommands.NEW_TRANS))
             {
                 state = ProcessNewTransactionReceived(state, command, node);
@@ -33,7 +33,7 @@ namespace BlockchainApplication.Broadcaster
             {
                 ProcessHighestTransactionRequest(state, command, node);
             }
-            Console.WriteLine($"{DateTime.Now} - Command processed.");
+            state.OutputLog.Add($"{DateTime.Now} - Command processed.");
             return state;
         }
 

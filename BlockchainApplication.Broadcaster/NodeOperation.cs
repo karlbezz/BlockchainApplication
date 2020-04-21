@@ -1,4 +1,5 @@
-﻿using BlockchainApplication.Data.Objects;
+﻿using BlockchainApplication.Data.Constants;
+using BlockchainApplication.Data.Objects;
 using BlockchainApplication.Protocol.Commands;
 using BlockchainApplication.Protocol.Parser;
 using BlockchainApplication.Protocol.Processor;
@@ -18,6 +19,7 @@ namespace BlockchainApplication.Broadcaster
         private State state;
         private int sourcePort;
         private bool firstRun;
+        private bool processingUserCommand;
         private UdpClient udpServer;
 
         public NodeOperation(List<NodeDetails> seedNodes, int sourcePort, string username)
@@ -29,11 +31,123 @@ namespace BlockchainApplication.Broadcaster
             this.udpServer = new UdpClient(sourcePort);
             this.udpServer.Client.ReceiveTimeout = 5000;
             this.udpServer.Client.SendTimeout = 5000;
+            this.processingUserCommand = false;
+        }
+
+        
+        public void HandleUserRequests()
+        {
+            while (true)
+            {
+                Console.WriteLine(PromptConstants.FormulatePromptDialog());
+                string command = Console.ReadLine();
+                if (command.StartsWith("help"))
+                {
+                    Console.WriteLine(PromptConstants.FormulatePromptDialog());
+                }
+                else if(command.StartsWith("log"))
+                {
+                    Console.WriteLine($"Full Log");
+                    foreach (string line in state.OutputLog)
+                    {
+                        Console.WriteLine(line);
+                    }
+                }
+                else if (command.StartsWith("getTx"))
+                {
+                    try
+                    {
+                        int transactionNumber = int.Parse(command.Split(' ')[1]);
+                        Transaction transaction = state.Transactions.FirstOrDefault(p => p.Number == transactionNumber);
+                        if (transaction != null)
+                        {
+                            Console.WriteLine(PromptConstants.FormulateTransactionOutput(transaction));
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Transaction {transactionNumber} was not found.");
+                        }
+                    }
+                    catch(Exception)
+                    {
+                        Console.WriteLine("Failed to extract transaction number from command. Please ensure that there are no spaces after the transaction number and the command is written in a correct format");
+
+                    }
+
+                }
+                else if (command.StartsWith("highTx"))
+                {
+                    int transactionNumber = state.Transactions.Max(p => p.Number);
+                    Console.WriteLine($"Max Transaction Number {transactionNumber}");
+                }
+                else if (command.StartsWith("newTx"))
+                {
+                    string toAddress = command.Split(' ')[1];
+                    Console.WriteLine($"Adding Transaction.. Please wait");
+                    var transaction = AddNewTransaction(toAddress);
+                    if(transaction != null)
+                    {
+                        string transactionOutput = PromptConstants.FormulateTransactionOutput(transaction);
+                        Console.WriteLine($"Transaction Added\n{transactionOutput}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"Invalid command passed.");
+                    Console.WriteLine(PromptConstants.FormulatePromptDialog());
+                }
+
+                Console.WriteLine($"Press any key to continue..");
+                Console.ReadLine();
+                Console.Clear();
+            }
+        }
+
+        private Transaction AddNewTransaction(string to)
+        {
+            processingUserCommand = true;
+            int transactionNumber = state.Transactions.Max(p => p.Number) + 1;
+            if (!state.Balances.ContainsKey(to))
+            {
+                Console.WriteLine($"User {to} does not exist.");
+                return null;
+            }
+            else if(state.Balances[state.Username] == 0)
+            {
+                Console.WriteLine($"Not enough balance for user {state.Username}.");
+                return null;
+            }
+
+            while (!state.NodeState.Equals(NodeState.AVAILABLE))
+            {
+            }
+
+            state.NodeState = NodeState.SENDING;
+            Transaction transaction = new Transaction(transactionNumber, state.Username, to, (long)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
+            state.Transactions.Add(transaction);
+            state.Balances[state.Username] -= 1;
+            if (!state.Balances.ContainsKey(to))
+            {
+                state.Balances.Add(to, 0);
+            }
+
+            state.Balances[to] += 1;
+            foreach(var node in seedNodes)
+            {
+                byte[] message = MessageProcessor.ProcessMessage(BlockchainCommands.NEW_TRANS,
+                                                                     new string[] { transaction.Number.ToString(), transaction.From,
+                                                                                    transaction.To, transaction.Timestamp.ToString()});
+                NodeBroadcasting.BroadcastToSeedNode(message, node);
+            }
+
+            processingUserCommand = false;
+            state.NodeState = NodeState.AVAILABLE;
+            return transaction;
         }
 
         public void AddInitTransactions()
         {
-            Console.WriteLine($"{DateTime.Now} - Adding mined transactions..");
+            state.OutputLog.Add($"{DateTime.Now} - Adding mined transactions..");
             if (!state.Balances.ContainsKey(state.Username))
             {
                 state.Balances.Add(state.Username, 0);
@@ -41,7 +155,8 @@ namespace BlockchainApplication.Broadcaster
             int maxTxNumber = state.Transactions.Count;
             for(int i= 0; i < 10; i++)
             {
-                Transaction transaction = new Transaction(maxTxNumber, "00", state.Username,(long)DateTime.UtcNow.Subtract(new DateTime(1970,1,1)).TotalSeconds);
+                System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+                Transaction transaction = new Transaction(maxTxNumber, "00", state.Username, (long)(DateTime.UtcNow - dtDateTime).TotalSeconds);
                 state.Transactions.Add(transaction);
                 state.Balances[state.Username] += 1;
                 maxTxNumber++;
@@ -54,7 +169,7 @@ namespace BlockchainApplication.Broadcaster
                     NodeBroadcasting.BroadcastToSeedNode(message, node);
                 }
             }
-            Console.WriteLine($"{DateTime.Now} - Mined transactions added.");
+            state.OutputLog.Add($"{DateTime.Now} - Mined transactions added.");
         }
 
         public void InitOperations()
@@ -64,9 +179,8 @@ namespace BlockchainApplication.Broadcaster
                 Task syncTask = Task.Factory.StartNew(() => {
                     while (true)
                     {
-                        while (!state.NodeState.Equals(NodeState.AVAILABLE))
+                        while (!state.NodeState.Equals(NodeState.AVAILABLE) || processingUserCommand)
                         {
-                            Console.WriteLine($"{DateTime.Now} - Waiting for node to finish receiving requests..");
                         }
                         SyncData();
                         if (firstRun)
@@ -83,22 +197,29 @@ namespace BlockchainApplication.Broadcaster
                     Thread.Sleep(100);
                     while (true)
                     {
+                        while (processingUserCommand)
+                        {
+                        }
                         if (state.NodeState.Equals(NodeState.AVAILABLE))
                         {
-                            Console.WriteLine($"{DateTime.Now} - Started Receiving Requests..");
                             ReceiveRequests();
                         }
                     }
                 });
 
-                Task.WaitAll(syncTask, handleRequests);
+                Task userRequestsHandling = Task.Factory.StartNew(() =>
+                {
+                    HandleUserRequests();
+                });
+
+                Task.WaitAll(syncTask, handleRequests, userRequestsHandling);
             }
         }
 
         private void SyncData()
         {
             state.NodeState = NodeState.SYNCING;
-            Console.WriteLine($"{DateTime.Now} - Syncing..");
+            state.OutputLog.Add($"{DateTime.Now} - Syncing..");
             int highestTransaction = 0;
             NodeDetails highestTransactionNode = null;
 
@@ -113,7 +234,7 @@ namespace BlockchainApplication.Broadcaster
                     var highestTransactionResultCommand = (HighestTransactionResultCommand)command;
                     if (highestTransaction < highestTransactionResultCommand.TransactionNumber)
                     {
-                        Console.WriteLine($"{DateTime.Now} - Highest Transaction Updated.");
+                        state.OutputLog.Add($"{DateTime.Now} - Highest Transaction Updated.");
                         highestTransaction = highestTransactionResultCommand.TransactionNumber;
                         highestTransactionNode = node;
                     }
@@ -121,10 +242,13 @@ namespace BlockchainApplication.Broadcaster
             }
 
             int currentTxNumber = state.Transactions.Count == 0 ? 0 : state.Transactions.Max(p => p.Number);
-            SyncingOperations.UpdateState(udpServer, state, highestTransactionNode, sourcePort, highestTransaction, currentTxNumber);
+            if(currentTxNumber < highestTransaction)
+            {
+                SyncingOperations.UpdateState(udpServer, state, highestTransactionNode, sourcePort, highestTransaction, currentTxNumber);
+                state.Transactions.OrderBy(p => p.Number);
+            }
 
-            state.Transactions.OrderBy(p => p.Number);
-            Console.WriteLine($"{DateTime.Now} - Syncing Finished.");
+            state.OutputLog.Add($"{DateTime.Now} - Syncing Finished.");
             state.NodeState = NodeState.AVAILABLE;
         }
 

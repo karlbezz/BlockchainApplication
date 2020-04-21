@@ -46,7 +46,7 @@ namespace BlockchainApplication.Protocol.Parser
                 CommandType = BlockchainCommands.NEW_TRANS,
                 TransactionNumber = transactionNumberBytes.ToInt(),
                 FromUser = fromUserBytes.ToStringValue(),
-                ToUser = fromUserBytes.ToStringValue(),
+                ToUser = toUserBytes.ToStringValue(),
                 Timestamp = timestampBytes.ToLong()
             };
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,13 +13,14 @@ namespace BlockchainApplication.Data.Objects
         public List<Transaction> Transactions { get; set; }
         public Dictionary<string, int> Balances { get; set; }
         public NodeState NodeState { get; set; }
-
+        public ConcurrentBag<string> OutputLog { get; set; }
         public State(string username)
         {
             this.Username = username;
             this.Transactions = new List<Transaction>();
             this.Balances = new Dictionary<string, int>();
             this.NodeState = NodeState.AVAILABLE;
+            this.OutputLog = new ConcurrentBag<string>();
         }
     }
 }

@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Constants\PromptConstants.cs" />
     <Compile Include="Extensions\BytesExtension.cs" />
     <Compile Include="Extensions\IntExtensions.cs" />
     <Compile Include="Extensions\LongExtensions.cs" />
@@ -52,8 +53,6 @@
     <Compile Include="Objects\Transaction.cs" />
     <Compile Include="Utilities\DateTimeUtilities.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Constants\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
