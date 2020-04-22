@@ -9,12 +9,12 @@ namespace BlockchainApplication.Data.Objects
     public class Transaction
     {
         public int Number { get; set; }
-        public long Timestamp { get; set; }
+        public int Timestamp { get; set; }
         public string From { get; set; }
         public string To { get; set; }
         public int Amount { get; set; }
 
-        public Transaction(int number, string from, string to, long timestamp, int amount = 1)
+        public Transaction(int number, string from, string to, int timestamp, int amount = 1)
         {
             this.Number = number;
             this.From = from;

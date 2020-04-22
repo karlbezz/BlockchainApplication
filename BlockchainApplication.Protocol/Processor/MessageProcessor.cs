@@ -14,9 +14,9 @@ namespace BlockchainApplication.Protocol.Processor
             {
                 byte[] command = CommandProcessor.ProcessCommand(commandType, messageParams);
                 byte commandLength = command.Length.ToByte();
-                List<byte> message = new List<byte>() { 2, commandLength };
+                List<byte> message = new List<byte>() { 0x32, commandLength };
                 message.AddRange(command);
-                message.Add(3);
+                message.Add(0x33);
                 return message.ToArray();
             }
             else

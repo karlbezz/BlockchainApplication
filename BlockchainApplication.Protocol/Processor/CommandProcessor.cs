@@ -29,30 +29,13 @@ namespace BlockchainApplication.Protocol.Processor
             }
         }
 
-        private static byte[] ProcessNewTransactionCommand(string transactionNumber, string fromUser, string toUser)
-        {
-            byte[] prefixBytes = "n".ToBytes();
-            byte[] tnBytes = transactionNumber.ToInteger().ToBytes();
-            byte[] fromUserBytes = fromUser.ToBytes();
-            byte[] toUserBytes = toUser.ToBytes();
-            byte[] timestamp = DateTimeUtilities.ConvertToUnixTimestampBytes(DateTime.Now);
-
-            List<byte> transactionCommandBytes = new List<byte>();
-            transactionCommandBytes.AddRange(prefixBytes);
-            transactionCommandBytes.AddRange(tnBytes);
-            transactionCommandBytes.AddRange(fromUserBytes);
-            transactionCommandBytes.AddRange(toUserBytes);
-            transactionCommandBytes.AddRange(timestamp);
-            return transactionCommandBytes.ToArray();
-        }
-
         private static byte[] ProcessNewTransactionCommand(string transactionNumber, string fromUser, string toUser, string timestamp)
         {
-            byte[] prefixBytes = "n".ToBytes();
-            byte[] tnBytes = transactionNumber.ToInteger().ToBytes();
+            byte[] prefixBytes = { 0x6e };
+            byte[] tnBytes = transactionNumber.ToInteger().ToBytesBigEndian();
             byte[] fromUserBytes = fromUser.ToBytes();
             byte[] toUserBytes = toUser.ToBytes();
-            byte[] timestampBytes = Convert.ToInt64(timestamp).ToBytes();
+            byte[] timestampBytes = Convert.ToInt32(timestamp).ToBytesInt32();
 
             List<byte> transactionCommandBytes = new List<byte>();
             transactionCommandBytes.AddRange(prefixBytes);
@@ -65,14 +48,14 @@ namespace BlockchainApplication.Protocol.Processor
 
         private static byte[] ProcessHighestTransactionCommand()
         {
-            byte[] prefixBytes = "h".ToBytes();
+            byte[] prefixBytes = new byte[] { 0x68 };
             return prefixBytes;
         }
 
         private static byte[] ProcessHighestTransactionResultCommand(string transactionNumber)
         {
-            byte[] prefixBytes = "m".ToBytes();
-            byte[] tnBytes = transactionNumber.ToInteger().ToBytes();
+            byte[] prefixBytes = new byte[] { 0x6d };
+            byte[] tnBytes = transactionNumber.ToInteger().ToBytesBigEndian();
             List<byte> highestTransactionCommandBytes = new List<byte>();
             highestTransactionCommandBytes.AddRange(prefixBytes);
             highestTransactionCommandBytes.AddRange(tnBytes);
@@ -81,8 +64,8 @@ namespace BlockchainApplication.Protocol.Processor
 
         private static byte[] ProcessGetTransactionCommand(string transactionNumber)
         {
-            byte[] prefixBytes = "g".ToBytes();
-            byte[] tnBytes = transactionNumber.ToInteger().ToBytes();
+            byte[] prefixBytes = new byte[] { 0x67 };
+            byte[] tnBytes = transactionNumber.ToInteger().ToBytesBigEndian();
             List<byte> getTransactionCommandBytes = new List<byte>();
             getTransactionCommandBytes.AddRange(prefixBytes);
             getTransactionCommandBytes.AddRange(tnBytes);

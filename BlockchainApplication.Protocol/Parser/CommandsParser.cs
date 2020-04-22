@@ -1,6 +1,7 @@
 ﻿using BlockchainApplication.Data.Extensions;
 using BlockchainApplication.Protocol.Commands;
 using System;
+using System.Linq;
 using System.Text;
 
 namespace BlockchainApplication.Protocol.Parser
@@ -36,29 +37,29 @@ namespace BlockchainApplication.Protocol.Parser
 
         public static NewTransactionCommand ParseNewTransactionCommand(byte[] command)
         {
-            byte[] transactionNumberBytes = command.GetRange(1, 4);
-            byte[] fromUserBytes = command.GetRange(5, 2);
-            byte[] toUserBytes = command.GetRange(7, 2);
-            byte[] timestampBytes = command.GetRange(9, command.Length - 9);
+            byte[] transactionNumberBytes = command.GetRange(1, 2).Reverse().ToArray();
+            byte[] fromUserBytes = command.GetRange(3, 2);
+            byte[] toUserBytes = command.GetRange(5, 2);
+            byte[] timestampBytes = command.GetRange(7, command.Length - 7).Reverse().ToArray();
             return new NewTransactionCommand()
             {
                 Prefix = Encoding.ASCII.GetString(new byte[] { command[0] }),
                 CommandType = BlockchainCommands.NEW_TRANS,
-                TransactionNumber = transactionNumberBytes.ToInt(),
+                TransactionNumber = transactionNumberBytes.ToInt16(),
                 FromUser = fromUserBytes.ToStringValue(),
                 ToUser = toUserBytes.ToStringValue(),
-                Timestamp = timestampBytes.ToLong()
+                Timestamp = timestampBytes.ToInt32()
             };
         }
 
         public static HighestTransactionResultCommand ParseHighestTransactionResultCommand(byte[] command)
         {
-            byte[] transactionNumberBytes = command.GetRange(1, 4);
+            byte[] transactionNumberBytes = command.GetRange(1, 2).Reverse().ToArray();
             return new HighestTransactionResultCommand()
             {
                 Prefix = Encoding.ASCII.GetString(new byte[] { command[0] }),
                 CommandType = BlockchainCommands.HIGHEST_TRN_RES,
-                TransactionNumber = transactionNumberBytes.ToInt()
+                TransactionNumber = transactionNumberBytes.ToInt16()
             };
         }
 
@@ -73,11 +74,11 @@ namespace BlockchainApplication.Protocol.Parser
 
         public static GetTransactionCommand ParseGetTransactionCommand(byte[] command)
         {
-            byte[] transactionNumberBytes = command.GetRange(1, 4);
+            byte[] transactionNumberBytes = command.GetRange(1, 2).Reverse().ToArray();
             return new GetTransactionCommand()
             {
                 Prefix = Encoding.ASCII.GetString(new byte[] { command[0] }),
-                TransactionNumber = transactionNumberBytes.ToInt(),
+                TransactionNumber = transactionNumberBytes.ToInt16(),
                 CommandType = BlockchainCommands.GET_TRANS
             };
         }

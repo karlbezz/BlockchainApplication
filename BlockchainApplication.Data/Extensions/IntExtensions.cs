@@ -21,12 +21,40 @@ namespace BlockchainApplication.Data.Extensions
             }
         }
 
+        public static byte[] ToBytesBigEndian(this int valueInt)
+        {
+            try
+            {
+                byte[] numberBytes = BitConverter.GetBytes((Int16)valueInt).Reverse().ToArray();
+                return numberBytes;
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine($"{DateTime.Now} - Failed to convert int {valueInt} to bytes");
+                throw e;
+            }
+        }
+
         public static byte[] ToBytes(this int valueInt)
         {
             try
             {
                 byte[] numberBytes = BitConverter.GetBytes((Int16)valueInt);
-                return BitConverter.GetBytes(valueInt);
+                return numberBytes;
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine($"{DateTime.Now} - Failed to convert int {valueInt} to bytes");
+                throw e;
+            }
+        }
+
+        public static byte[] ToBytesInt32(this int valueInt)
+        {
+            try
+            {
+                byte[] numberBytes = BitConverter.GetBytes((Int32)valueInt).Reverse().ToArray();
+                return numberBytes;
             }
             catch(Exception e)
             {

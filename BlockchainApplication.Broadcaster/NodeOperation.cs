@@ -29,8 +29,8 @@ namespace BlockchainApplication.Broadcaster
             this.state = new State(username);
             this.firstRun = true;
             this.udpServer = new UdpClient(sourcePort);
-            this.udpServer.Client.ReceiveTimeout = 5000;
-            this.udpServer.Client.SendTimeout = 5000;
+            this.udpServer.Client.ReceiveTimeout = 15000;
+            this.udpServer.Client.SendTimeout = 15000;
             this.processingUserCommand = false;
         }
 
@@ -123,7 +123,7 @@ namespace BlockchainApplication.Broadcaster
             }
 
             state.NodeState = NodeState.SENDING;
-            Transaction transaction = new Transaction(transactionNumber, state.Username, to, (long)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
+            Transaction transaction = new Transaction(transactionNumber, state.Username, to, (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
             state.Transactions.Add(transaction);
             state.Balances[state.Username] -= 1;
             if (!state.Balances.ContainsKey(to))
@@ -152,11 +152,11 @@ namespace BlockchainApplication.Broadcaster
             {
                 state.Balances.Add(state.Username, 0);
             }
-            int maxTxNumber = state.Transactions.Count;
+            int maxTxNumber = state.Transactions.Count == 0 ? 1 : state.Transactions.Last().Number + 1;
             for(int i= 0; i < 10; i++)
             {
                 System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
-                Transaction transaction = new Transaction(maxTxNumber, "00", state.Username, (long)(DateTime.UtcNow - dtDateTime).TotalSeconds);
+                Transaction transaction = new Transaction(maxTxNumber, "00", state.Username, (int)(DateTime.UtcNow - dtDateTime).TotalSeconds);
                 state.Transactions.Add(transaction);
                 state.Balances[state.Username] += 1;
                 maxTxNumber++;

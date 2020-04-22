@@ -21,13 +21,26 @@ namespace BlockchainApplication.Data.Extensions
             }
         }
 
-        public static int ToInt(this byte[] valueBytes)
+        public static int ToInt16(this byte[] valueBytes)
         {
             try
             {
                 return BitConverter.ToInt16(valueBytes, 0);
             }
             catch(Exception e)
+            {
+                Console.WriteLine($"{DateTime.Now} - Failed to convert bytes to int");
+                throw e;
+            }
+        }
+
+        public static int ToInt32(this byte[] valueBytes)
+        {
+            try
+            {
+                return BitConverter.ToInt32(valueBytes, 0);
+            }
+            catch (Exception e)
             {
                 Console.WriteLine($"{DateTime.Now} - Failed to convert bytes to int");
                 throw e;
