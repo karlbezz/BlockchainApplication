@@ -38,6 +38,41 @@ namespace BlockchainApplication.Broadcaster
             }
         }
 
+        public static State PerformSyncing(State state, UdpClient udpServer, int sourcePort, List<NodeDetails> seedNodes)
+        {
+            state.OutputLog.Add($"{DateTime.Now} - Syncing..");
+            int highestTransaction = 1;
+            NodeDetails highestTransactionNode = null;
+
+            string[] messageParams = new string[] { };
+            byte[] message = MessageProcessor.ProcessMessage(BlockchainCommands.HIGHEST_TRN, messageParams);
+            foreach (var node in seedNodes)
+            {
+                NodeBroadcasting.BroadcastToSeedNode(message, node);
+                var command = SyncingOperations.ReceiveMessage(state, udpServer, node, BlockchainCommands.HIGHEST_TRN_RES, sourcePort);
+                if (command.CommandType != BlockchainCommands.NO_RESPONSE)
+                {
+                    var highestTransactionResultCommand = (HighestTransactionResultCommand)command;
+                    if (highestTransaction < highestTransactionResultCommand.TransactionNumber)
+                    {
+                        state.OutputLog.Add($"{DateTime.Now} - Highest Transaction Updated.");
+                        highestTransaction = highestTransactionResultCommand.TransactionNumber;
+                        highestTransactionNode = node;
+                    }
+                }
+            }
+
+            int currentTxNumber = state.Transactions.Count == 0 ? 1 : state.Transactions.Max(p => p.Number);
+            if (currentTxNumber < highestTransaction)
+            {
+                UpdateState(udpServer, state, highestTransactionNode, sourcePort, highestTransaction, currentTxNumber);
+                state.Transactions.OrderBy(p => p.Number);
+            }
+
+            state.OutputLog.Add($"{DateTime.Now} - Syncing Finished.");
+            return state;
+        }
+
         private static Command ReceiveNewTransaction(UdpClient udpServer, NodeDetails node, int expectedTxNumber, int sourcePort)
         {
             while (true)
@@ -75,7 +110,7 @@ namespace BlockchainApplication.Broadcaster
             }
         }
 
-        public static State UpdateState(UdpClient udpServer, State state, NodeDetails node, int sourcePort, int highestTransaction, int currentTransaction)
+        private static State UpdateState(UdpClient udpServer, State state, NodeDetails node, int sourcePort, int highestTransaction, int currentTransaction)
         {
             for (int i = currentTransaction; i <= highestTransaction; i++)
             {
