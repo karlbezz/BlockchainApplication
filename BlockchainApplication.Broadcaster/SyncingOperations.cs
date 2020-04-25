@@ -38,6 +38,37 @@ namespace BlockchainApplication.Broadcaster
             }
         }
 
+        public static State AddInitTransactions(State state, List<NodeDetails> seedNodes)
+        {
+            state.OutputLog.Add($"{DateTime.Now} - Adding mined transactions..");
+            if (!state.Balances.ContainsKey(state.Username))
+            {
+                state.Balances.Add(state.Username, 0);
+            }
+            int maxTxNumber = state.Transactions.Count == 0 ? 1 : state.Transactions.Last().Number + 1;
+            for (int i = 0; i < 10; i++)
+            {
+                System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+                Transaction transaction = new Transaction(maxTxNumber, "00", state.Username, (int)(DateTime.UtcNow - dtDateTime).TotalSeconds);
+                state.Transactions.Add(transaction);
+                state.Balances[state.Username] += 1;
+                maxTxNumber++;
+
+                foreach (var node in seedNodes)
+                {
+                    byte[] message = MessageProcessor.ProcessMessage(BlockchainCommands.NEW_TRANS, new string[] 
+                    {
+                        transaction.Number.ToString(), transaction.From, transaction.To, transaction.Timestamp.ToString(),
+                        transaction.Approved.ToString(), transaction.ApprovalTransactionNumber.ToString()
+                    });
+
+                    NodeBroadcasting.BroadcastToSeedNode(message, node);
+                }
+            }
+            state.OutputLog.Add($"{DateTime.Now} - Mined transactions added.");
+            return state;
+        }
+
         public static State PerformSyncing(State state, UdpClient udpServer, int sourcePort, List<NodeDetails> seedNodes)
         {
             state.OutputLog.Add($"{DateTime.Now} - Syncing..");
@@ -49,7 +80,7 @@ namespace BlockchainApplication.Broadcaster
             foreach (var node in seedNodes)
             {
                 NodeBroadcasting.BroadcastToSeedNode(message, node);
-                var command = SyncingOperations.ReceiveMessage(state, udpServer, node, BlockchainCommands.HIGHEST_TRN_RES, sourcePort);
+                var command = ReceiveMessage(state, udpServer, node, BlockchainCommands.HIGHEST_TRN_RES, sourcePort);
                 if (command.CommandType != BlockchainCommands.NO_RESPONSE)
                 {
                     var highestTransactionResultCommand = (HighestTransactionResultCommand)command;
@@ -65,7 +96,7 @@ namespace BlockchainApplication.Broadcaster
             int currentTxNumber = state.Transactions.Count == 0 ? 1 : state.Transactions.Max(p => p.Number);
             if (currentTxNumber < highestTransaction)
             {
-                UpdateState(udpServer, state, highestTransactionNode, sourcePort, highestTransaction, currentTxNumber);
+                UpdateState(udpServer, state, highestTransactionNode, sourcePort, highestTransaction, currentTxNumber + 1);
                 state.Transactions.OrderBy(p => p.Number);
             }
 
@@ -135,17 +166,32 @@ namespace BlockchainApplication.Broadcaster
                     state.OutputLog.Add($"{DateTime.Now} - Failed to get transaction {i}");
                     return state;
                 }
-                state.Transactions.Add(new Transaction(command.TransactionNumber, command.FromUser, command.ToUser, command.Timestamp));
+
+                if (command.FromUser != "00" && !state.Balances.ContainsKey(command.FromUser))
+                {
+                    state.Balances.Add(command.FromUser, 0);
+                }
                 if (!state.Balances.ContainsKey(command.ToUser))
                 {
                     state.Balances.Add(command.ToUser, 0);
                 }
-                state.Balances[command.ToUser] += 1;
 
-                if (state.Balances.ContainsKey(command.FromUser))
+                if(command.Approved == 1)
                 {
-                    state.Balances[command.FromUser] -= 1;
+                    if(command.FromUser == "00")
+                    {
+                        //Mined Transaction
+                        state.Balances[command.ToUser] += 1;
+                    }
+                    else
+                    {
+                        var referenceTransaction = state.Transactions.FirstOrDefault(p => p.Number == command.ApprovalTransactionNumber);
+                        state.Balances[referenceTransaction.From] -= 1;
+                        state.Balances[referenceTransaction.To] += 1;
+                    }
                 }
+
+                state.Transactions.Add(new Transaction(command.TransactionNumber, command.FromUser, command.ToUser, command.Timestamp, command.Approved, command.ApprovalTransactionNumber));
             }
 
             return state;

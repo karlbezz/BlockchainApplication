@@ -5,6 +5,8 @@ using BlockchainApplication.Protocol.Processor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,6 +14,19 @@ namespace BlockchainApplication.Broadcaster
 {
     public static class RequestsProcessor
     {
+        public static byte[] ReceiveBytePacket(UdpClient udpServer, IPEndPoint remoteEp)
+        {
+            try
+            {
+                var received = udpServer.Receive(ref remoteEp).ToList();
+                return received.ToArray();
+            }
+            catch (SocketException)
+            {
+                return new byte[0];
+            }
+        }
+
         public static State ProcessReceiveRequest(State state, byte[] messageBytes, NodeDetails node)
         {
             var command = CommandsParser.ParseCommand(messageBytes);
@@ -57,7 +72,8 @@ namespace BlockchainApplication.Broadcaster
             {
                 byte[] message = MessageProcessor.ProcessMessage(BlockchainCommands.NEW_TRANS, new string[]
                 {
-                        transaction.Number.ToString(), transaction.From, transaction.To, transaction.Timestamp.ToString()
+                    transaction.Number.ToString(), transaction.From, transaction.To, transaction.Timestamp.ToString(),
+                    transaction.Approved.ToString(), transaction.ApprovalTransactionNumber.ToString()
                 });
 
                 NodeBroadcasting.BroadcastToSeedNode(message, node);
@@ -70,8 +86,29 @@ namespace BlockchainApplication.Broadcaster
             var existingTransaction = state.Transactions.FirstOrDefault(p => p.Number == newTransactionCommand.TransactionNumber);
             if (existingTransaction == null)
             {
-                state.Transactions.Add(new Transaction(newTransactionCommand.TransactionNumber, newTransactionCommand.FromUser,
-                                                       newTransactionCommand.ToUser, newTransactionCommand.Timestamp));
+                if (newTransactionCommand.Approved == 1)
+                {
+                    if (!state.Balances.ContainsKey(newTransactionCommand.ToUser))
+                    {
+                        state.Balances.Add(newTransactionCommand.ToUser, 0);
+                    }
+
+                    if(newTransactionCommand.ApprovalTransactionNumber != 0)
+                    {
+                        //Approved Transaction
+                        var currentTransaction = state.Transactions.First(p => p.Number == newTransactionCommand.ApprovalTransactionNumber);
+                        state.Balances[currentTransaction.From] -= 1;
+                        state.Balances[currentTransaction.To] += 1;
+                    }
+                    else
+                    {
+                        //Mined Transaction
+                        state.Balances[newTransactionCommand.ToUser] += 1;
+                    }
+                }
+
+                state.Transactions.Add(new Transaction(newTransactionCommand.TransactionNumber, newTransactionCommand.FromUser,newTransactionCommand.ToUser, newTransactionCommand.Timestamp,
+                                                       newTransactionCommand.Approved, newTransactionCommand.ApprovalTransactionNumber));
             }
             else
             {
@@ -79,18 +116,53 @@ namespace BlockchainApplication.Broadcaster
                 if (existingTransaction.Timestamp > newTransactionCommand.Timestamp)
                 {
                     //Replace transaction
-                    state.Balances[state.Transactions[index].To] -= 1;
-                    state.Transactions[index] = new Transaction(newTransactionCommand.TransactionNumber, newTransactionCommand.FromUser,
-                                                                newTransactionCommand.ToUser, newTransactionCommand.Timestamp);
-                    if (!state.Balances.ContainsKey(newTransactionCommand.ToUser))
+                    if(existingTransaction.Approved == 1)
                     {
-                        state.Balances.Add(newTransactionCommand.ToUser, 0);
+                        if(existingTransaction.From != "00")
+                        {
+                            //Normal Transaction
+                            state.Balances[existingTransaction.From] += 1;
+                            state.Balances[existingTransaction.To] -= 1;
+                        }
+                        else if (existingTransaction.ApprovalTransactionNumber != 0)
+                        {
+                            //Approves another transaction
+                            var currentTransaction = state.Transactions.First(p => p.Number == existingTransaction.ApprovalTransactionNumber);
+                            state.Balances[currentTransaction.From] += 1;
+                            state.Balances[currentTransaction.To] -= 1;
+                        }
+                        else
+                        {
+                            //Mined Transaction
+                            state.Balances[existingTransaction.To] -= 1;
+                        }
                     }
-                    state.Balances[newTransactionCommand.ToUser] += 1;
+                    if(newTransactionCommand.Approved == 1)
+                    {
+                        if (!state.Balances.ContainsKey(newTransactionCommand.ToUser))
+                        {
+                            state.Balances.Add(newTransactionCommand.ToUser, 0);
+                        }
+
+                        if(newTransactionCommand.ApprovalTransactionNumber != 0)
+                        {
+                            //Approved Transaction
+                            var currentTransaction = state.Transactions.First(p => p.Number == newTransactionCommand.ApprovalTransactionNumber);
+                            state.Balances[currentTransaction.From] -= 1;
+                            state.Balances[currentTransaction.To] += 1;
+                        }
+                        else
+                        {
+                            //Mined Transaction
+                            state.Balances[newTransactionCommand.ToUser] += 1;
+                        }
+                    }
+
+                    state.Transactions[index] = new Transaction(newTransactionCommand.TransactionNumber, newTransactionCommand.FromUser,newTransactionCommand.ToUser, 
+                                                                newTransactionCommand.Timestamp, newTransactionCommand.Approved, newTransactionCommand.ApprovalTransactionNumber);  
                 }
             }
 
-            NodeBroadcasting.SendOkMessage(node);
             return state;
         }
     }

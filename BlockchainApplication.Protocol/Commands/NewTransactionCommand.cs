@@ -12,5 +12,7 @@ namespace BlockchainApplication.Protocol.Commands
         public int Timestamp { get; set; }
         public string FromUser { get; set; }
         public string ToUser { get; set; }
+        public int Approved { get; set; }
+        public int ApprovalTransactionNumber { get; set; }
     }
 }

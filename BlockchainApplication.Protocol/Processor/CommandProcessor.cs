@@ -13,7 +13,7 @@ namespace BlockchainApplication.Protocol.Processor
             switch (commandType)
             {
                 case BlockchainCommands.NEW_TRANS:
-                    return ProcessNewTransactionCommand(messageParams[0], messageParams[1], messageParams[2], messageParams[3]);
+                    return ProcessNewTransactionCommand(messageParams[0], messageParams[1], messageParams[2], messageParams[3], messageParams[4], messageParams[5]);
                 case BlockchainCommands.HIGHEST_TRN:
                     return ProcessHighestTransactionCommand();
                 case BlockchainCommands.HIGHEST_TRN_RES:
@@ -29,13 +29,15 @@ namespace BlockchainApplication.Protocol.Processor
             }
         }
 
-        private static byte[] ProcessNewTransactionCommand(string transactionNumber, string fromUser, string toUser, string timestamp)
+        private static byte[] ProcessNewTransactionCommand(string transactionNumber, string fromUser, string toUser, string timestamp, string approved, string approvedTransactionNumber)
         {
             byte[] prefixBytes = { 0x6e };
             byte[] tnBytes = transactionNumber.ToInteger().ToBytesBigEndian();
             byte[] fromUserBytes = fromUser.ToBytes();
             byte[] toUserBytes = toUser.ToBytes();
             byte[] timestampBytes = Convert.ToInt32(timestamp).ToBytesInt32();
+            byte[] approvedBytes = approved.ToInteger().ToBytesBigEndian();
+            byte[] approvedTxnBytes = approvedTransactionNumber.ToInteger().ToBytesBigEndian();
 
             List<byte> transactionCommandBytes = new List<byte>();
             transactionCommandBytes.AddRange(prefixBytes);
@@ -43,6 +45,8 @@ namespace BlockchainApplication.Protocol.Processor
             transactionCommandBytes.AddRange(fromUserBytes);
             transactionCommandBytes.AddRange(toUserBytes);
             transactionCommandBytes.AddRange(timestampBytes);
+            transactionCommandBytes.AddRange(approvedBytes);
+            transactionCommandBytes.AddRange(approvedTxnBytes);
             return transactionCommandBytes.ToArray();
         }
 

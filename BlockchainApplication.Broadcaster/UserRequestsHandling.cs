@@ -1,10 +1,10 @@
 ﻿using BlockchainApplication.Data.Constants;
 using BlockchainApplication.Data.Objects;
+using BlockchainApplication.Protocol.Commands;
+using BlockchainApplication.Protocol.Processor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BlockchainApplication.Broadcaster
 {
@@ -28,18 +28,61 @@ namespace BlockchainApplication.Broadcaster
             {
                 HandleHighTransactionRequest(state);
             }
+            else if (command.StartsWith("listTx"))
+            {
+                HandleListTransactionsRequest(state);
+            }
+            else if (command.StartsWith("balance"))
+            {
+                HandleBalanceRequest(state);
+            }
             else
             {
                 HandleInvalidRequest();
             }
+        }       
+        
+        private static void HandleBalanceRequest(State state)
+        {
+            Console.WriteLine($"Balance for user {state.Username}: {state.Balances[state.Username]}");
         }
 
-        public static void HandleHelpRequest()
+        private static void HandleListTransactionsRequest(State state)
+        {
+            Console.WriteLine($"Listing Transactions not approved by user {state.Username}");
+            Console.WriteLine("Number,From,To,Timestamp");
+            bool nonApprovedTxsExist = false;
+            List<Transaction> userTransactions = new List<Transaction>();
+            foreach(var transaction in state.Transactions)
+            {
+                if(transaction.To == state.Username && transaction.Approved == 0)
+                {
+                    System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+                    userTransactions.Add(transaction);
+                    nonApprovedTxsExist = true;
+                }
+            }
+
+            foreach(var userTransaction in userTransactions)
+            {
+                if(!state.Transactions.Any(p=>p.ApprovalTransactionNumber == userTransaction.Number))
+                {
+                    Console.WriteLine(PromptConstants.FormulateTransactionOutputInline(userTransaction));
+                }
+            }
+
+            if (!nonApprovedTxsExist)
+            {
+                Console.WriteLine("All transactions approved. No transactions listed");
+            }
+        }
+
+        private static void HandleHelpRequest()
         {
             Console.WriteLine(PromptConstants.FormulatePromptDialog());
         }
 
-        public static void HandleLogRequest(State state)
+        private static void HandleLogRequest(State state)
         {
             Console.WriteLine($"Full Log");
             foreach (string line in state.OutputLog)
@@ -48,7 +91,7 @@ namespace BlockchainApplication.Broadcaster
             }
         }
 
-        public static void HandleGetTransactionRequest(State state, string command)
+        private static void HandleGetTransactionRequest(State state, string command)
         {
             try
             {
@@ -70,16 +113,78 @@ namespace BlockchainApplication.Broadcaster
             }
         }
 
-        public static void HandleHighTransactionRequest(State state)
+        private static void HandleHighTransactionRequest(State state)
         {
-            int transactionNumber = state.Transactions.Max(p => p.Number);
+            int transactionNumber = state.Transactions.Count == 0 ? 0 : state.Transactions.Max(p => p.Number);
             Console.WriteLine($"Max Transaction Number {transactionNumber}");
         }
 
-        public static void HandleInvalidRequest()
+        private static void HandleInvalidRequest()
         {
-            Console.WriteLine($"Invalid command passed.");
+            Console.WriteLine($"Invalid Request");
             Console.WriteLine(PromptConstants.FormulatePromptDialog());
+        }
+
+        public static Transaction GetApprovalTransaction(State state, string transactionNumber)
+        {
+            int txNumber = int.Parse(transactionNumber);
+            var transaction = state.Transactions.FirstOrDefault(p => p.Number == txNumber);
+            if(transaction == null)
+            {
+                Console.WriteLine($"Error getting transaction number {transactionNumber}. Transaction does not exist");
+            }
+            else if(transaction.To != state.Username || transaction.Approved == 1)
+            {
+                Console.WriteLine($"Error getting transaction number {transactionNumber}");
+                Console.WriteLine($"The transaction have either been already approved or belongs to another user than the current user");
+            }
+            return transaction;
+        }
+
+        public static State HandleNewApprovalTransaction(State state, List<NodeDetails> seedNodes, Transaction transaction)
+        {
+            int transactionNumber = state.Transactions.Max(p => p.Number) + 1;
+            if (state.Balances[state.Username] <= 0)
+            {
+                Console.WriteLine($"Not enough balance for user {state.Username}.");
+                return state;
+            }
+            Transaction approvalTransaction = new Transaction(transactionNumber, "00", transaction.To, (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds, 1, transaction.Number);
+            state.Transactions.Add(approvalTransaction);
+            state.Balances[transaction.To] += 1;
+            HandleTransactionRequest(seedNodes, approvalTransaction);
+            return state;
+        }
+
+        private static void HandleTransactionRequest(List<NodeDetails> seedNodes, Transaction transaction)
+        {
+            foreach (var node in seedNodes)
+            {
+                byte[] message = MessageProcessor.ProcessMessage(BlockchainCommands.NEW_TRANS, new string[]
+                {
+                    transaction.Number.ToString(), transaction.From, transaction.To, transaction.Timestamp.ToString(),
+                    transaction.Approved.ToString(), transaction.ApprovalTransactionNumber.ToString()
+                });
+                NodeBroadcasting.BroadcastToSeedNode(message, node);
+            }
+
+            string transactionOutput = PromptConstants.FormulateTransactionOutput(transaction);
+            Console.WriteLine($"Transaction Added\n{transactionOutput}");
+        }
+
+        public static State HandleNewTransactionRequest(State state, List<NodeDetails> seedNodes, string to)
+        {
+            int transactionNumber = state.Transactions.Max(p => p.Number) + 1;
+            if (!state.Balances.ContainsKey(to))
+            {
+                Console.WriteLine($"User {to} does not exist.");
+                return state;
+            }
+
+            Transaction transaction = new Transaction(transactionNumber, state.Username, to, (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds, 0, 0);
+            state.Transactions.Add(transaction);
+            HandleTransactionRequest(seedNodes, transaction);
+            return state;
         }
     }
 }

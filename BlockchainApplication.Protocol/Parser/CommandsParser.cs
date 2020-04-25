@@ -40,7 +40,10 @@ namespace BlockchainApplication.Protocol.Parser
             byte[] transactionNumberBytes = command.GetRange(1, 2).Reverse().ToArray();
             byte[] fromUserBytes = command.GetRange(3, 2);
             byte[] toUserBytes = command.GetRange(5, 2);
-            byte[] timestampBytes = command.GetRange(7, command.Length - 7).Reverse().ToArray();
+            byte[] timestampBytes = command.GetRange(7, 4).Reverse().ToArray();
+            byte[] approvedBytes = command.GetRange(11, 2).Reverse().ToArray();
+            byte[] approvedTxnBytes = command.GetRange(13, 2).Reverse().ToArray();
+
             return new NewTransactionCommand()
             {
                 Prefix = Encoding.ASCII.GetString(new byte[] { command[0] }),
@@ -48,7 +51,9 @@ namespace BlockchainApplication.Protocol.Parser
                 TransactionNumber = transactionNumberBytes.ToInt16(),
                 FromUser = fromUserBytes.ToStringValue(),
                 ToUser = toUserBytes.ToStringValue(),
-                Timestamp = timestampBytes.ToInt32()
+                Timestamp = timestampBytes.ToInt32(),
+                Approved = approvedBytes.ToInt16(),
+                ApprovalTransactionNumber = approvedTxnBytes.ToInt16()
             };
         }
 
