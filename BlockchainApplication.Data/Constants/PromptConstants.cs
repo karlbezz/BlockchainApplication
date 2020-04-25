@@ -18,6 +18,7 @@ namespace BlockchainApplication.Data.Constants
             builder.AppendLine($"- highTx to get highest transaction");
             builder.AppendLine($"- listTx to list all the transactions that have not yet been approved");
             builder.AppendLine($"- balance to show user\'s balance");
+            builder.AppendLine($"- balances to show all users balances");
             builder.AppendLine($"- getTx [txNum] to get the transaction");
             builder.AppendLine($"- newTx [to] to add a new transaction");
             builder.AppendLine($"- approveTx [txNum] to approve a transaction");

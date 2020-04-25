@@ -32,6 +32,10 @@ namespace BlockchainApplication.Broadcaster
             {
                 HandleListTransactionsRequest(state);
             }
+            else if (command.StartsWith("balances"))
+            {
+                HandleBalancesRequest(state);
+            }
             else if (command.StartsWith("balance"))
             {
                 HandleBalanceRequest(state);
@@ -45,6 +49,14 @@ namespace BlockchainApplication.Broadcaster
         private static void HandleBalanceRequest(State state)
         {
             Console.WriteLine($"Balance for user {state.Username}: {state.Balances[state.Username]}");
+        }
+
+        private static void HandleBalancesRequest(State state)
+        {
+            foreach(var balance in state.Balances)
+            {
+                Console.WriteLine($"User: {balance.Key}, Balance: {balance.Value}");
+            }
         }
 
         private static void HandleListTransactionsRequest(State state)
@@ -150,8 +162,11 @@ namespace BlockchainApplication.Broadcaster
                 return state;
             }
             Transaction approvalTransaction = new Transaction(transactionNumber, "00", transaction.To, (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds, 1, transaction.Number);
+            Transaction referenceTransaction = state.Transactions.First(p => p.Number == approvalTransaction.ApprovalTransactionNumber);
+
             state.Transactions.Add(approvalTransaction);
             state.Balances[transaction.To] += 1;
+            state.Balances[referenceTransaction.From] -= 1;
             HandleTransactionRequest(seedNodes, approvalTransaction);
             return state;
         }

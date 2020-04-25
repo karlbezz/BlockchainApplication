@@ -96,7 +96,7 @@ namespace BlockchainApplication.Broadcaster
             int currentTxNumber = state.Transactions.Count == 0 ? 1 : state.Transactions.Max(p => p.Number);
             if (currentTxNumber < highestTransaction)
             {
-                UpdateState(udpServer, state, highestTransactionNode, sourcePort, highestTransaction, currentTxNumber + 1);
+                UpdateState(udpServer, state, highestTransactionNode, sourcePort, highestTransaction, currentTxNumber == 1 ? 1 : currentTxNumber + 1);
                 state.Transactions.OrderBy(p => p.Number);
             }
 
@@ -178,12 +178,12 @@ namespace BlockchainApplication.Broadcaster
 
                 if(command.Approved == 1)
                 {
-                    if(command.FromUser == "00")
+                    if(command.FromUser == "00" && command.ApprovalTransactionNumber == 0)
                     {
                         //Mined Transaction
                         state.Balances[command.ToUser] += 1;
                     }
-                    else
+                    else if(command.FromUser == "00" && command.ApprovalTransactionNumber != 0)
                     {
                         var referenceTransaction = state.Transactions.FirstOrDefault(p => p.Number == command.ApprovalTransactionNumber);
                         state.Balances[referenceTransaction.From] -= 1;
