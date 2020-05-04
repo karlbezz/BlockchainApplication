@@ -171,6 +171,23 @@ namespace BlockchainApplication.Broadcaster
             return state;
         }
 
+        public static State HandleNewApprovedTransaction(State state, List<NodeDetails> seedNodes, Transaction transaction)
+        {
+            int transactionNumber = state.Transactions.Max(p => p.Number) + 1;
+            if (state.Balances[state.Username] <= 0)
+            {
+                Console.WriteLine($"Not enough balance for user {state.Username}.");
+                return state;
+            }
+            Transaction approvalTransaction = new Transaction(transactionNumber, state.Username, transaction.To, (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds, 1, transaction.Number);
+
+            state.Transactions.Add(approvalTransaction);
+            state.Balances[approvalTransaction.To] += 1;
+            state.Balances[approvalTransaction.From] -= 1;
+            HandleTransactionRequest(seedNodes, approvalTransaction);
+            return state;
+        }
+
         private static void HandleTransactionRequest(List<NodeDetails> seedNodes, Transaction transaction)
         {
             foreach (var node in seedNodes)
@@ -187,7 +204,7 @@ namespace BlockchainApplication.Broadcaster
             Console.WriteLine($"Transaction Added\n{transactionOutput}");
         }
 
-        public static State HandleNewTransactionRequest(State state, List<NodeDetails> seedNodes, string to)
+        public static State HandleNewTransactionRequest(State state, List<NodeDetails> seedNodes, string to, int approved)
         {
             int transactionNumber = state.Transactions.Max(p => p.Number) + 1;
             if (!state.Balances.ContainsKey(to))
@@ -197,6 +214,12 @@ namespace BlockchainApplication.Broadcaster
             }
 
             Transaction transaction = new Transaction(transactionNumber, state.Username, to, (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds, 0, 0);
+            if (approved == 1)
+            {
+                transaction.Approved = 1;
+                transaction.ApprovalTransactionNumber = transaction.Number;
+                return HandleNewApprovedTransaction(state, seedNodes, transaction);
+            }
             state.Transactions.Add(transaction);
             HandleTransactionRequest(seedNodes, transaction);
             return state;

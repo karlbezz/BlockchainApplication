@@ -189,6 +189,11 @@ namespace BlockchainApplication.Broadcaster
                         state.Balances[referenceTransaction.From] -= 1;
                         state.Balances[referenceTransaction.To] += 1;
                     }
+                    else if(command.FromUser != "00" && command.Approved == 1)
+                    {
+                        state.Balances[command.FromUser] -= 1;
+                        state.Balances[command.ToUser] += 1;
+                    }
                 }
 
                 state.Transactions.Add(new Transaction(command.TransactionNumber, command.FromUser, command.ToUser, command.Timestamp, command.Approved, command.ApprovalTransactionNumber));

@@ -32,21 +32,27 @@ namespace BlockchainApplication.Broadcaster
             this.udpServer.Client.SendTimeout = 15000;
         }
 
-        
+
         public void HandleUserRequests()
         {
             Console.WriteLine(PromptConstants.FormulatePromptDialog());
             string command = Console.ReadLine();
             if (command.StartsWith("newTx"))
             {
-                string toAddress = command.Split(' ')[1];
+                string[] splitCommand = command.Split(' ');
+                string toAddress = splitCommand[1];
+                int approved = int.Parse(splitCommand[2]);
+                if (approved > 1 || approved < 0)
+                {
+                    throw new Exception("Invalid approval status");
+                }
                 Console.WriteLine($"Adding Transaction.. Please wait");
                 while (!state.NodeState.Equals(NodeState.AVAILABLE))
                 {
                 }
 
                 state.NodeState = NodeState.SENDING;
-                state = UserRequestsHandling.HandleNewTransactionRequest(state, seedNodes, toAddress);
+                state = UserRequestsHandling.HandleNewTransactionRequest(state, seedNodes, toAddress, approved);
                 state.NodeState = NodeState.AVAILABLE;
             }
             else if (command.StartsWith("approveTx"))

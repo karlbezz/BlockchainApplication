@@ -92,13 +92,22 @@ namespace BlockchainApplication.Broadcaster
                     {
                         state.Balances.Add(newTransactionCommand.ToUser, 0);
                     }
+                    if(newTransactionCommand.FromUser != "00" && !state.Balances.ContainsKey(newTransactionCommand.FromUser))
+                    {
+                        state.Balances.Add(newTransactionCommand.FromUser, 0);
+                    }
 
-                    if(newTransactionCommand.ApprovalTransactionNumber != 0)
+                    if(newTransactionCommand.ApprovalTransactionNumber != 0 && newTransactionCommand.FromUser == "00")
                     {
                         //Approved Transaction
                         var currentTransaction = state.Transactions.First(p => p.Number == newTransactionCommand.ApprovalTransactionNumber);
                         state.Balances[currentTransaction.From] -= 1;
                         state.Balances[currentTransaction.To] += 1;
+                    }
+                    else if(newTransactionCommand.ApprovalTransactionNumber != 0)
+                    {
+                        state.Balances[newTransactionCommand.FromUser] -= 1;
+                        state.Balances[newTransactionCommand.ToUser] += 1;
                     }
                     else
                     {
@@ -143,13 +152,22 @@ namespace BlockchainApplication.Broadcaster
                         {
                             state.Balances.Add(newTransactionCommand.ToUser, 0);
                         }
+                        if(newTransactionCommand.FromUser != "00" && !state.Balances.ContainsKey(newTransactionCommand.FromUser))
+                        {
+                            state.Balances.Add(newTransactionCommand.FromUser, 0);
+                        }
 
-                        if(newTransactionCommand.ApprovalTransactionNumber != 0)
+                        if(newTransactionCommand.FromUser == "00" && newTransactionCommand.ApprovalTransactionNumber != 0)
                         {
                             //Approved Transaction
                             var currentTransaction = state.Transactions.First(p => p.Number == newTransactionCommand.ApprovalTransactionNumber);
                             state.Balances[currentTransaction.From] -= 1;
                             state.Balances[currentTransaction.To] += 1;
+                        }
+                        else if(newTransactionCommand.FromUser != "00")
+                        {
+                            state.Balances[newTransactionCommand.FromUser] -= 1;
+                            state.Balances[newTransactionCommand.ToUser] += 1;
                         }
                         else
                         {
