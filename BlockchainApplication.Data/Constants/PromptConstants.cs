@@ -1,4 +1,5 @@
 ﻿using BlockchainApplication.Data.Objects;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +23,30 @@ namespace BlockchainApplication.Data.Constants
             builder.AppendLine($"- getTx [txNum] to get the transaction");
             builder.AppendLine($"- newTx [to] to add a new transaction");
             builder.AppendLine($"- approveTx [txNum] to approve a transaction");
+            return builder.ToString();
+        }
+
+        public static string SerializeAndOutputBlock(string blockHash, Block block)
+        {
+            if (block != null)
+            {
+                return $"Requested Block:\n{JsonConvert.SerializeObject(block)}";
+            }
+            else
+            {
+                return $"Block with hash {blockHash} not found.";
+            }
+        }
+
+        public static string FormulateSBBPromptDialog()
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine($"Available commands..");
+            builder.AppendLine($"- help to popup this dialog");
+            builder.AppendLine($"- log to output the any logs made by the node");
+            builder.AppendLine($"- getBlk [blkHash] to get the transaction");
+            builder.AppendLine($"- newTx [to] to add a new transaction");
+            builder.AppendLine($"- listBlks to list all block hashes");
             return builder.ToString();
         }
 

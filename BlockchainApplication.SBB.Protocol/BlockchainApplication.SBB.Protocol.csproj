@@ -4,13 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A4774BFE-0E31-4BCE-B73D-D2D8E09473DF}</ProjectGuid>
+    <ProjectGuid>{AFD43D6D-F222-45A3-AD7C-1D0B262C2A36}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BlockchainApplication.Data</RootNamespace>
-    <AssemblyName>BlockchainApplication.Data</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <RootNamespace>BlockchainApplication.SBB.Protocol</RootNamespace>
+    <AssemblyName>BlockchainApplication.SBB.Protocol</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -30,9 +31,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="BouncyCastle.Crypto, Version=1.8.6.0, Culture=neutral, PublicKeyToken=0e99375e54769942, processorArchitecture=MSIL">
-      <HintPath>..\packages\Portable.BouncyCastle.1.8.6.7\lib\net40\BouncyCastle.Crypto.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -46,28 +44,27 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Constants\PromptConstants.cs" />
-    <Compile Include="Extensions\BytesExtension.cs" />
-    <Compile Include="Extensions\IntExtensions.cs" />
-    <Compile Include="Extensions\LongExtensions.cs" />
-    <Compile Include="Extensions\StringExtensions.cs" />
-    <Compile Include="FileHandling.cs" />
-    <Compile Include="Objects\Block.cs" />
-    <Compile Include="Objects\HashedContent.cs" />
-    <Compile Include="Objects\NodeState.cs" />
-    <Compile Include="Objects\NodeDetails.cs" />
-    <Compile Include="Objects\SBBTransaction.cs" />
-    <Compile Include="Objects\TimeElapsed.cs" />
-    <Compile Include="Objects\TransactionHashedContent.cs" />
-    <Compile Include="Objects\Wallet.cs" />
+    <Compile Include="Commands\BlockCommand.cs" />
+    <Compile Include="Commands\BlockHashesCommand.cs" />
+    <Compile Include="Commands\Command.cs" />
+    <Compile Include="Commands\CommandType.cs" />
+    <Compile Include="Commands\CountCommand.cs" />
+    <Compile Include="Commands\GetBlockHashesCommand.cs" />
+    <Compile Include="Commands\GetCountCommand.cs" />
+    <Compile Include="Commands\NewBlockCommand.cs" />
+    <Compile Include="Commands\RequestBlockCommand.cs" />
+    <Compile Include="Creator\MessageCreator.cs" />
+    <Compile Include="Parser\MessageParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Objects\State.cs" />
-    <Compile Include="Objects\Transaction.cs" />
-    <Compile Include="Utilities\DateTimeUtilities.cs" />
-    <Compile Include="Utilities\Hashing.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BlockchainApplication.Data\BlockchainApplication.Data.csproj">
+      <Project>{A4774BFE-0E31-4BCE-B73D-D2D8E09473DF}</Project>
+      <Name>BlockchainApplication.Data</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -13,7 +13,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlockchainApplication.Data"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlockchainApplication.Interpreter", "BlockchainApplication.Interpreter\BlockchainApplication.Interpreter.csproj", "{14EFB5CB-B203-4405-BF78-948B17C01F79}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlockchainApplication.SBB", "BlockchainApplication.SBB\BlockchainApplication.SBB.csproj", "{7450C4CB-5DCD-4C8D-908F-5791CCBAA16D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlockchainApplication.SBB.Protocol", "BlockchainApplication.SBB.Protocol\BlockchainApplication.SBB.Protocol.csproj", "{AFD43D6D-F222-45A3-AD7C-1D0B262C2A36}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlockchainApplication.SBB", "BlockchainApplication.SBB\BlockchainApplication.SBB.csproj", "{DCAA820E-0EF5-40ED-BFB2-191965B2D561}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,10 +43,14 @@ Global
 		{14EFB5CB-B203-4405-BF78-948B17C01F79}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{14EFB5CB-B203-4405-BF78-948B17C01F79}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{14EFB5CB-B203-4405-BF78-948B17C01F79}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7450C4CB-5DCD-4C8D-908F-5791CCBAA16D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7450C4CB-5DCD-4C8D-908F-5791CCBAA16D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7450C4CB-5DCD-4C8D-908F-5791CCBAA16D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7450C4CB-5DCD-4C8D-908F-5791CCBAA16D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AFD43D6D-F222-45A3-AD7C-1D0B262C2A36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFD43D6D-F222-45A3-AD7C-1D0B262C2A36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFD43D6D-F222-45A3-AD7C-1D0B262C2A36}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AFD43D6D-F222-45A3-AD7C-1D0B262C2A36}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DCAA820E-0EF5-40ED-BFB2-191965B2D561}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCAA820E-0EF5-40ED-BFB2-191965B2D561}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCAA820E-0EF5-40ED-BFB2-191965B2D561}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCAA820E-0EF5-40ED-BFB2-191965B2D561}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

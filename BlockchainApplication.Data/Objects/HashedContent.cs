@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,9 +9,16 @@ namespace BlockchainApplication.Data.Objects
 {
     public class HashedContent
     {
+        [JsonProperty("prev_hash")]
         public string PreviousBlockHash { get; set; }
+
+        [JsonProperty("nonce")]
         public int Nonce { get; set; }
+
+        [JsonProperty("timestamp")]
         public int Timestamp { get; set; }
+
+        [JsonProperty("transactions")]
         public List<SBBTransaction> Transactions { get; set; }
 
         public HashedContent()

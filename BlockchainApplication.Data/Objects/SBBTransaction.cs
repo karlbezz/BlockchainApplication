@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,14 +9,24 @@ namespace BlockchainApplication.Data.Objects
 {
     public class SBBTransaction
     {
-        public string From { get; set; }
-        public string To { get; set; }
+        [JsonProperty("hashedContent")]
+        public TransactionHashedContent HashedContent { get; set; }
+
+        [JsonProperty("hash")]
         public string Hash { get; set; }
+
+        public SBBTransaction()
+        {
+            this.HashedContent = new TransactionHashedContent();
+        }
 
         public SBBTransaction(string from, string to)
         {
-            this.From = from;
-            this.To = to;
+            this.HashedContent = new TransactionHashedContent()
+            {
+                FromAccount = from,
+                ToAccount = to
+            };
         }
     }
 }

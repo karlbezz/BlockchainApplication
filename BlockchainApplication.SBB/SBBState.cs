@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Transactions;
 
 namespace BlockchainApplication.SBB
 {
@@ -11,12 +10,28 @@ namespace BlockchainApplication.SBB
         public Wallet Wallet { get; set; }
         public List<Block> Blocks { get; set; }
         public SBBNodeState NodeState { get; set; }
+        public string IP { get; set; }
+        public int Port { get; set; }
+
+        public List<string> Logger { get; set; }
 
         public SBBState()
         {
-            Blocks = new List<Block>();
-            Wallet = new Wallet();
-            NodeState = SBBNodeState.AVAILABLE;
+            this.Blocks = new List<Block>();
+            this.Wallet = new Wallet();
+            this.NodeState = SBBNodeState.AVAILABLE;
+            this.Logger = new List<string>();
         }
+
+        public SBBState(string ip, string port)
+        {
+            this.IP = ip;
+            this.Port = int.Parse(port);
+            this.Blocks = new List<Block>();
+            this.Wallet = new Wallet();
+            this.NodeState = SBBNodeState.AVAILABLE;
+            this.Logger = new List<string>();
+        }
+
     }
 }

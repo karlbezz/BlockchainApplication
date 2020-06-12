@@ -4,11 +4,10 @@ using System.Text;
 
 namespace BlockchainApplication.SBB
 {
-    public enum SBBNodeState
+    enum MiningStates
     {
-        AVAILABLE,
-        MININGBLOCK,
-        ADDINGTX,
-        PROCESSINGREQ
+        MINING,
+        GET_BLOCK_HASHES,
+        GET_BLOCK,
     }
 }
